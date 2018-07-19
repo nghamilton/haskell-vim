@@ -130,6 +130,65 @@ if get(g:, 'haskell_enable_pattern_synonyms', 0)
   syn keyword haskellPatternKeyword pattern
 endif
 
+" Shameless re-ripped from wlangstroth/vim-haskell
+" C Preprocessor directives. Shamelessly ripped from c.vim and trimmed
+" First, see whether to flag directive-like lines or not
+if (!exists("hs_allow_hash_operator"))
+  syn match   haskellError      display "^\s*\(%:\|#\).*$"
+endif
+" Accept %: for # (C99)
+syn region  haskellPreCondit  start="^\s*\(%:\|#\)\s*\(if\|ifdef\|ifndef\|elif\)\>" skip="\\$" end="$" end="//"me=s-1 contains=haskellComment,haskellCppString,haskellCommentError
+syn match   haskellPreCondit  display "^\s*\(%:\|#\)\s*\(else\|endif\)\>"
+syn region  haskellCppOut     start="^\s*\(%:\|#\)\s*if\s\+0\+\>" end=".\@=\|$" contains=haskellCppOut2
+syn region  haskellCppOut2    contained start="0" end="^\s*\(%:\|#\)\s*\(endif\>\|else\>\|elif\>\)" contains=haskellCppSkip
+syn region  haskellCppSkip    contained start="^\s*\(%:\|#\)\s*\(if\>\|ifdef\>\|ifndef\>\)" skip="\\$" end="^\s*\(%:\|#\)\s*endif\>" contains=haskellCppSkip
+syn region  haskellIncluded   display contained start=+"+ skip=+\\\\\|\\"+ end=+"+
+syn match   haskellIncluded   display contained "<[^>]*>"
+syn match   haskellInclude    display "^\s*\(%:\|#\)\s*include\>\s*["<]" contains=haskellIncluded
+syn cluster haskellPreProcGroup   contains=haskellPreCondit,haskellIncluded,haskellInclude,haskellDefine,haskellCppOut,haskellCppOut2,haskellCppSkip,haskellCommentStartError
+syn region  haskellDefine     matchgroup=haskellPreCondit start="^\s*\(%:\|#\)\s*\(define\|undef\)\>" skip="\\$" end="$"
+syn region  haskellPreProc    matchgroup=haskellPreCondit start="^\s*\(%:\|#\)\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" keepend
+
+syn region  haskellComment    matchgroup=haskellCommentStart start="/\*" end="\*/" contains=haskellCommentStartError,cSpaceError contained
+syn match   haskellCommentError   display "\*/" contained
+syn match   haskellCommentStartError display "/\*"me=e-1 contained
+syn region  haskellCppString  start=+L\="+ skip=+\\\\\|\\"\|\\$+ excludenl end=+"+ end='$' contains=cSpecial contained
+
+syn match hsHlFunctionName "[a-z_]\(\S\&[^,\(\)\[\]]\)*" contained
+syn match hsFunctionName "^[a-z_]\(\S\&[^,\(\)\[\]]\)*" contained contains=hsHlFunctionName
+syn match hsHlInfixFunctionName "`[a-z_][^`]*`" contained
+syn match hsInfixFunctionName "^\S[^=]*`[a-z_][^`]*`"me=e-1 contained contains=hsHlInfixFunctionName,hsType,hsConSym,hsVarSym,hsString,hsCharacter
+syn match hsHlInfixOp "\(\W\&\S\&[^`(){}'[\]]\)\+" contained contains=hsString
+syn match hsInfixOpFunctionName "^\(\(\w\|[[\]{}]\)\+\|\(\".*\"\)\|\('.*'\)\)\s*[^:]=*\(\W\&\S\&[^='\"`()[\]{}@]\)\+"
+      \ contained contains=hsHlInfixOp,hsCharacter
+syn match hsOpFunctionName        "(\(\W\&[^(),\"]\)\+)" contained
+"syn region hsFunction start="^["'a-z_([{]" end="=\(\s\|\n\|\w\|[([]\)" keepend extend
+syn region hsFunction start="^["'a-zA-Z_([{]\(\(.\&[^=]\)\|\(\n\s\)\)*=" end="\(\s\|\n\|\w\|[([]\)"
+      \ contains=hsOpFunctionName,hsInfixOpFunctionName,hsInfixFunctionName,hsFunctionName,hsType,hsConSym,hsVarSym,hsString,hsCharacter
+syn match hsTypeOp "::"
+syn match hsDeclareFunction "^[a-z_(]\S*\(\s\|\n\)*::" contains=hsFunctionName,hsOpFunctionName,hsTypeOp
+
+
+highlight def link haskellCppString String
+highlight def link haskellCommentStart Comment
+highlight def link haskellCommentError Error
+highlight def link haskellCommentStartError Error
+highlight def link haskellError Error
+highlight def link haskellInclude Include
+highlight def link haskellPreProc PreProc
+highlight def link haskellIncluded String
+highlight def link haskellPreCondit PreCondit
+highlight def link haskellComment Comment
+highlight def link haskellCppSkip haskellCppOut
+highlight def link haskellCppOut2 haskellCppOut
+highlight def link haskellCppOut Comment
+highlight def link hsFunction Function
+highlight def link hsDeclareFunction Function
+highlight def link hsHlFunctionName Function
+highlight def link hsHlInfixFunctionName Function
+highlight def link hsHlInfixOp Function
+highlight def link hsOpFunctionName Function
+
 highlight def link haskellBottom Macro
 highlight def link haskellTH Boolean
 highlight def link haskellIdentifier Identifier
